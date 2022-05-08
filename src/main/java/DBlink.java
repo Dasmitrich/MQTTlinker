@@ -10,12 +10,11 @@ public class DBlink {
     public DBlink(){
         try {
             connection = DriverManager.getConnection(connectionUrl, "root", "1234");
-            System.out.println("Connected");
+            System.out.println("Connected to database");
         } catch (SQLException e) {
             System.err.println(e);
         }
     }
-
 
     public void executeQuery(String query){
         try {

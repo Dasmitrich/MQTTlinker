@@ -1,4 +1,5 @@
 public class Run extends Thread{
+    //в двух потоках запускаем подписчика и публикующего
     public static void main(String[] args){
         Thread t1 = new Thread(new Runnable() {
             @Override

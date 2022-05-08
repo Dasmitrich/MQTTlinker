@@ -7,7 +7,7 @@ public class Iot implements MqttCallback {
     final String lv_sensor = "factory/level_sensor";
     final String ph_sensor = "factory/photo_sensor";
     final String object = "factory/object";
-
+    //конструктор подключается к серверу
     public Iot(String clientid){
         try {
             client = new MqttClient("tcp://localhost:1883", clientid);
@@ -17,6 +17,8 @@ public class Iot implements MqttCallback {
             System.err.println(e);
         }
     }
+
+    ///метод публикации
     public void publish(String level_sensor){
         MqttMessage message = new MqttMessage(level_sensor.getBytes());
         try {
@@ -27,6 +29,7 @@ public class Iot implements MqttCallback {
         }
     }
 
+    //метод подписчика
     public void subscribe() {
         try {
             client.subscribe(im_sensor);
@@ -44,18 +47,22 @@ public class Iot implements MqttCallback {
 
     }
 
+    //переопределенный метод реакции на сообщение
     @Override
     public void messageArrived(String topic, MqttMessage message)
             throws Exception {
         System.out.println("Message sent to parsing: " + message);
+        //парсим сообщение
         String query = messageParse(topic, message);
         System.out.println("Send query: " + query);
+        //отправляем в бд
         link.executeQuery(query);
     }
 
+    //парсим пришедшие данные
     private String messageParse(String topic, MqttMessage message){
-        String msg[] = message.toString().split("#");
-        String query = null;
+        String[] msg = message.toString().split("#");
+        String query;
         switch (topic) {
             case "factory/image_sensor" -> {
                 query = "INSERT INTO factory.image_sensor (imageSensorId, total, good, bad) VALUES ( " +
