@@ -3,10 +3,10 @@ import org.eclipse.paho.client.mqttv3.*;
 public class Iot implements MqttCallback {
     MqttClient client;
     DBlink link = new DBlink();
-    final String im_sensor = "factory/image_sensor";
-    final String lv_sensor = "factory/level_sensor";
-    final String ph_sensor = "factory/photo_sensor";
-    final String object = "factory/object";
+    final String im_sensor_t = "factory/image_sensor";
+    final String lv_sensor_t = "factory/level_sensor";
+    final String ph_sensor_t = "factory/photo_sensor";
+    final String model_t = "factory/model";
     //конструктор подключается к серверу
     public Iot(String clientid){
         try {
@@ -19,10 +19,17 @@ public class Iot implements MqttCallback {
     }
 
     ///метод публикации
-    public void publish(String level_sensor){
-        MqttMessage message = new MqttMessage(level_sensor.getBytes());
+    public void publish(String level_sensor, String image_sensor, String photo_sensor){
+        MqttMessage lv_msg = new MqttMessage(level_sensor.getBytes());
+        MqttMessage im_msg = new MqttMessage(image_sensor.getBytes());
+        MqttMessage ph_msg = new MqttMessage(photo_sensor.getBytes());
+        //MqttMessage mo_msg = new MqttMessage(model.getBytes());
+
         try {
-            client.publish(lv_sensor, message);
+            client.publish(lv_sensor_t, lv_msg);
+            client.publish(im_sensor_t, im_msg);
+            client.publish(ph_sensor_t, ph_msg);
+            //client.publish(model_t, mo_msg);
             System.out.println("Message published");
         } catch (MqttException e){
             System.err.println(e);
@@ -32,10 +39,10 @@ public class Iot implements MqttCallback {
     //метод подписчика
     public void subscribe() {
         try {
-            client.subscribe(im_sensor);
-            client.subscribe(lv_sensor);
-            client.subscribe(ph_sensor);
-            client.subscribe(object);
+            client.subscribe(im_sensor_t);
+            client.subscribe(lv_sensor_t);
+            client.subscribe(ph_sensor_t);
+            client.subscribe(model_t);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -65,31 +72,27 @@ public class Iot implements MqttCallback {
         String query;
         switch (topic) {
             case "factory/image_sensor" -> {
-                query = "INSERT INTO factory.image_sensor (imageSensorId, total, good, bad) VALUES ( " +
-                        msg[0] + "," + msg[1] + "," + msg[2] + "," + msg[3] + ")";
-                return query;
-            }
-            case "factory/model" -> {
-                query = "INSERT INTO model (modelId, nameOfModel, coordXModel, coodYModel, squareModel) VALUES (" +
-                        msg[0] + ",'" + msg[1] + "'," + msg[2] + "," + msg[3] + "," + msg[4] + ")";
-                return query;
-            }
-            case "factory/object" -> {
-                query = "INSERT INTO object (objectId, modelId, coordX, coodY, square) VALUES (" +
+                query = "INSERT INTO factory.image_sensor (imageSensorId, total, good, bad, imSDate) VALUES (" +
                         msg[0] + "," + msg[1] + "," + msg[2] + "," + msg[3] + "," + msg[4] + ")";
                 return query;
             }
+            /*case "factory/model" -> {
+                query = "INSERT INTO factory.model (modelId, nameOfModel, coordXModel, coordYModel, squareModel) VALUES (" +
+                        msg[0] + "," + msg[1] + "," + msg[2] + "," + msg[3] + "," + msg[4] + ")";
+                return query;
+            }*/
             case "factory/level_sensor" -> {
-                query = "INSERT INTO factory.level_sensor (levelSensorId, criticalLevel, isCritical) VALUES (" +
-                        msg[0] + "," + msg[1] + "," + msg[2] + ")";
+                query = "INSERT INTO factory.level_sensor (levelSensorId, criticalLevel, isCritical, level, lSDate) VALUES (" +
+                        msg[0] + "," + msg[1] + "," + msg[2] + ","+ msg[3] + "," + msg[4] + ")";
                 return query;
             }
             case "factory/photo_sensor" -> {
-                query = "INSERT INTO factory.photo_sensor (photoSensorId, isDetectedObject, levelObject) VALUES (" +
-                        msg[0] + "," + msg[1] + "," + msg[2] + ")";
+                query = "INSERT INTO factory.photo_sensor (photoSensorId, isDetectedObject, levelObject, pSDate) VALUES (" +
+                        msg[0] + "," + msg[1] + "," + msg[2] + "," + msg[3] + ")";
                 return query;
             }
             default -> {
+                System.err.println("Topic loss");
                 return null;
             }
         }
